@@ -6,6 +6,7 @@ from unfold.admin import ModelAdmin
 from .models import (
     Advertisement,
     Announcement,
+    Bonus,
     Channel,
     Count,
     CourseChannel,
@@ -98,3 +99,8 @@ class AdvertisementModelAdmin(ModelAdmin):
 @admin.register(Post)
 class PostModelAdmin(ModelAdmin):
     list_display = ["content"]
+
+
+@admin.register(Bonus)
+class BonusModelAdmin(ModelAdmin):
+    list_display = ["user_id", "post_id", "created"]
