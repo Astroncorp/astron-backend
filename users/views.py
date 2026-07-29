@@ -240,13 +240,15 @@ def claim_bonus(request: HttpRequest):
         # Bazaga yangi bonus yozamiz
         Bonus.objects.create(user_id=user_id, post_id=post_id)
 
-        requests.post(
+        res = requests.post(
             "https://astrontest.uz/mypage/users_balans_saqlash.php",
             data={
                 "profile_id": user_id,
                 "amount": 1000,
             },
         )
+
+        print(res.text)
 
         return Response({"status": "ok", "message": "Bonus berildi"})
 
