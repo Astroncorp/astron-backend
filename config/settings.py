@@ -143,6 +143,10 @@ UNFOLD = {
                         "title": "Postlar",
                         "link": reverse_lazy("admin:users_post_changelist"),
                     },
+                    {
+                        "title": "Bonuslar",
+                        "link": reverse_lazy("admin:users_bonus_changelist"),
+                    },
                 ],
             }
         ]
