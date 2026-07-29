@@ -1,16 +1,17 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from unfold.admin import ModelAdmin
 
 from .models import (
-    Announcement,
-    User,
-    Transaction,
-    Channel,
     Advertisement,
+    Announcement,
+    Channel,
     Count,
     CourseChannel,
+    Post,
+    Transaction,
+    User,
 )
 
 
@@ -92,3 +93,8 @@ class ChannelModelAdmin(ModelAdmin):
 @admin.register(Advertisement)
 class AdvertisementModelAdmin(ModelAdmin):
     list_display = ["content", "status", "receivers"]
+
+
+@admin.register(Post)
+class PostModelAdmin(ModelAdmin):
+    list_display = ["content"]

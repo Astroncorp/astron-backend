@@ -1,13 +1,13 @@
 import requests
 from decouple import config
-from django.db import models
-from django.dispatch import receiver
-from django.db.models.signals import post_save
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from markdownx.models import MarkdownxField
 
 from .manager import UserManager
 from .worker import Worker
-
 
 BOT_URL = config("BOT_URL")
 
@@ -124,6 +124,25 @@ class Advertisement(models.Model):
         return self.content
 
 
+class Post(models.Model):
+    content = MarkdownxField()
+
+    def __str__(self):
+        return self.content
+
+
+class Bonus(models.Model):
+    user_id = models.BigIntegerField(db_index=True)
+    post_id = models.CharField(max_length=64, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user_id", "post_id")
+
+    def __str__(self):
+        return f"User {self.user_id} - Post {self.post_id}"
+
+
 def send_ads(ads: Advertisement):
     users = User.objects.filter(role="student")
     for user in users:
@@ -140,4 +159,17 @@ def send_ads(ads: Advertisement):
 def send_ads_receiver(sender, instance: Advertisement, created, **kwargs):
     if created:
         worker = Worker(send_ads, ads=instance)
+        worker.start()
+
+
+def send_post(post: Post):
+    data = {"content": post.content, "post_id": post.pk}
+
+    requests.post(BOT_URL + "/send-post", json=data)
+
+
+@receiver(post_save, sender=Post)
+def send_post_receiver(sender, instance: Post, created, **kwargs):
+    if created:
+        worker = Worker(send_post, post=instance)
         worker.start()

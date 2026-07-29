@@ -1,7 +1,7 @@
 from pathlib import Path
-from decouple import config, Csv
-from django.urls import reverse_lazy
 
+from decouple import Csv, config
+from django.urls import reverse_lazy
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # extra
+    "markdownx",
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
@@ -137,6 +138,10 @@ UNFOLD = {
                     {
                         "title": "Online kurslar",
                         "link": reverse_lazy("admin:users_coursechannel_changelist"),
+                    },
+                    {
+                        "title": "Postlar",
+                        "link": reverse_lazy("admin:users_post_changelist"),
                     },
                 ],
             }

@@ -1,12 +1,21 @@
 import json
 import time
 from datetime import datetime
+
+import requests
 from django.http import HttpRequest
-from rest_framework import generics
-from rest_framework import decorators
+from rest_framework import decorators, generics
 from rest_framework.response import Response
 
-from .models import User, Transaction, Announcement, Advertisement, Count, CourseChannel
+from .models import (
+    Advertisement,
+    Announcement,
+    Bonus,
+    Count,
+    CourseChannel,
+    Transaction,
+    User,
+)
 from .serializers import CourseChannelSerializer
 
 
@@ -214,3 +223,34 @@ def like_dislike(request: HttpRequest):
             course.likers.add(user)
 
     return Response({"status": "ok"})
+
+
+@decorators.api_view(http_method_names=["POST"])
+def claim_bonus(request: HttpRequest):
+    data = request.data
+    user_id = data.get("user_id")
+    post_id = data.get("post_id")
+
+    if not user_id or not post_id:
+        return Response(
+            {"status": "error", "message": "user_id va post_id shart"}, status=400
+        )
+
+    try:
+        # Bazaga yangi bonus yozamiz
+        Bonus.objects.create(user_id=user_id, post_id=post_id)
+
+        requests.post(
+            "https://astrontest.uz/mypage/users_balans_saqlash.php",
+            data={
+                "profile_id": user_id,
+                "amount": 1000,
+            },
+        )
+
+        return Response({"status": "ok", "message": "Bonus berildi"})
+
+    except:
+        return Response(
+            {"status": "already_claimed", "message": "Bonus allaqachon olingan"}
+        )

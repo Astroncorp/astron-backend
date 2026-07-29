@@ -1,14 +1,14 @@
 from django.urls import path
 
 from .views import (
-    payme_callback,
-    get_announcement,
-    telemetry,
-    increment_receivers,
     CourseChannelListAPIView,
+    claim_bonus,
+    get_announcement,
+    increment_receivers,
     like_dislike,
+    payme_callback,
+    telemetry,
 )
-
 
 urlpatterns = [
     path("payme/", payme_callback),
@@ -17,4 +17,5 @@ urlpatterns = [
     path("increment-receivers/", increment_receivers),
     path("course_channels/", CourseChannelListAPIView.as_view()),
     path("like_dislike/", like_dislike),
+    path("bonus/", claim_bonus),
 ]
