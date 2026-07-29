@@ -165,7 +165,9 @@ def send_ads_receiver(sender, instance: Advertisement, created, **kwargs):
 def send_post(post: Post):
     data = {"content": post.content, "post_id": post.pk}
 
-    requests.post(BOT_URL + "/send-post", json=data)
+    res = requests.post(BOT_URL + "/send-post/", json=data)
+
+    print(res.text)
 
 
 @receiver(post_save, sender=Post)
