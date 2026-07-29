@@ -232,9 +232,7 @@ def claim_bonus(request: HttpRequest):
     post_id = data.get("post_id")
 
     if not user_id or not post_id:
-        return Response(
-            {"status": "error", "message": "user_id va post_id shart"}, status=400
-        )
+        return Response({"claimed": False}, status=400)
 
     try:
         # Bazaga yangi bonus yozamiz
@@ -250,9 +248,7 @@ def claim_bonus(request: HttpRequest):
 
         print(res.text)
 
-        return Response({"status": "ok", "message": "Bonus berildi"})
+        return Response({"claimed": True})
 
     except:
-        return Response(
-            {"status": "already_claimed", "message": "Bonus allaqachon olingan"}
-        )
+        return Response({"claimed": False})
