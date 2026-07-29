@@ -163,10 +163,9 @@ def send_ads_receiver(sender, instance: Advertisement, created, **kwargs):
 
 
 def send_post(post: Post):
+    url = f"{BOT_URL.rstrip('/')}/send-post/"
     data = {"content": post.content, "post_id": post.pk}
-
-    res = requests.post(BOT_URL + "/send-post/", json=data)
-
+    res = requests.post(url=url, json=data, allow_redirects=False)
     print(res.text)
 
 
