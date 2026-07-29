@@ -103,4 +103,4 @@ class PostModelAdmin(ModelAdmin):
 
 @admin.register(Bonus)
 class BonusModelAdmin(ModelAdmin):
-    list_display = ["user_id", "post_id", "created"]
+    list_display = ["user_id", "post_id"]
