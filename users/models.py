@@ -93,6 +93,23 @@ class Count(models.Model):
         return str(self.count)
 
 
+class SubjectCounter(models.Model):
+    # Astrontest saytidagi fan IDsi; kirishlar soni shu IDga bog'lanadi.
+    subject_id = models.PositiveIntegerField(unique=True)
+    name = models.CharField(max_length=500)
+    position = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    count = models.PositiveBigIntegerField(default=0)
+
+    class Meta:
+        ordering = ["position", "subject_id"]
+        verbose_name = "Fan hisoblagichi"
+        verbose_name_plural = "Fan hisoblagichlari"
+
+    def __str__(self):
+        return self.name
+
+
 class Channel(models.Model):
     id = models.CharField(max_length=100, primary_key=True, verbose_name="ID")
     title = models.CharField(max_length=100, verbose_name="Nomi")
