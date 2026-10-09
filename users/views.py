@@ -4,6 +4,8 @@ from datetime import datetime
 
 import requests
 from django.http import HttpRequest
+from django.db.models import F
+from rest_framework.permissions import AllowAny
 from rest_framework import decorators, generics
 from rest_framework.response import Response
 
@@ -12,6 +14,7 @@ from .models import (
     Announcement,
     Bonus,
     Count,
+    SubjectCounter,
     CourseChannel,
     Transaction,
     User,
@@ -252,3 +255,24 @@ def claim_bonus(request: HttpRequest):
 
     except:
         return Response({"claimed": False})
+
+
+@decorators.api_view(http_method_names=["POST"])
+@decorators.permission_classes([AllowAny])
+def record_subject_visit(request: HttpRequest):
+    """Count a Testlar subject opening; no visitor identity is stored."""
+    try:
+        # text/plain avoids a browser CORS preflight for this public event endpoint.
+        data = json.loads(request.body.decode("utf-8"))
+        subject_id = data.get("subject_id")
+        if isinstance(subject_id, bool) or not isinstance(subject_id, int) or subject_id <= 0:
+            return Response({"status": "error", "message": "Invalid subject_id"}, status=400)
+    except (ValueError, UnicodeDecodeError, AttributeError, TypeError):
+        return Response({"status": "error", "message": "Invalid JSON"}, status=400)
+
+    changed = SubjectCounter.objects.filter(
+        subject_id=subject_id, is_active=True
+    ).update(count=F("count") + 1)
+    if not changed:
+        return Response({"status": "error", "message": "Subject not found"}, status=404)
+    return Response({"status": "ok"})
