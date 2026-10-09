@@ -136,6 +136,10 @@ UNFOLD = {
                         "link": reverse_lazy("admin:users_count_changelist"),
                     },
                     {
+                        "title": "Fan sanagich",
+                        "link": reverse_lazy("admin:users_fansanagich_changelist"),
+                    },
+                    {
                         "title": "Online kurslar",
                         "link": reverse_lazy("admin:users_coursechannel_changelist"),
                     },
