@@ -4,6 +4,10 @@ from datetime import datetime
 
 import requests
 from django.http import HttpRequest
+from django.db import transaction
+from django.db.models import F
+from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.authentication import SessionAuthentication
 from rest_framework import decorators, generics
 from rest_framework.response import Response
 
@@ -13,6 +17,7 @@ from .models import (
     Bonus,
     Count,
     CourseChannel,
+    SubjectVisitCount,
     Transaction,
     User,
 )
@@ -252,3 +257,62 @@ def claim_bonus(request: HttpRequest):
 
     except:
         return Response({"claimed": False})
+
+
+# Administrator-only subject catalog synchronization.
+# This endpoint must be called from a logged-in Django admin session.
+@decorators.api_view(["POST"])
+@decorators.authentication_classes([SessionAuthentication])
+@decorators.permission_classes([IsAdminUser])
+def sync_test_subjects(request: HttpRequest):
+    subjects = request.data.get("subjects")
+    if not isinstance(subjects, list) or len(subjects) > 1000:
+        return Response({"status": "error", "message": "Invalid subjects"}, status=400)
+
+    active = []
+    seen = set()
+    for item in subjects:
+        if not isinstance(item, dict):
+            return Response({"status": "error", "message": "Invalid subject"}, status=400)
+        sid, name = item.get("subject_id"), item.get("subject_name")
+        if not isinstance(sid, (str, int)) or isinstance(sid, bool) or not isinstance(name, str):
+            return Response({"status": "error", "message": "Invalid subject fields"}, status=400)
+        sid, name = str(sid).strip(), name.strip()
+        if not sid or len(sid) > 100 or not name or len(name) > 255:
+            return Response({"status": "error", "message": "Invalid subject fields"}, status=400)
+        if item.get("t_status") not in (1, "1") or sid in seen:
+            continue
+        seen.add(sid)
+        active.append((sid, name))
+
+    # Reject an empty catalog to prevent accidental removal of all subjects.
+    if not active:
+        return Response({"status": "error", "message": "No active test subjects"}, status=400)
+
+    with transaction.atomic():
+        for position, (sid, name) in enumerate(active):
+            SubjectVisitCount.objects.update_or_create(
+                subject_id=sid,
+                defaults={"subject_name": name, "sort_order": position, "is_active": True},
+            )
+        SubjectVisitCount.objects.exclude(subject_id__in=[sid for sid, _ in active]).update(is_active=False)
+    return Response({"status": "ok", "active_count": len(active)})
+
+
+# Called once by the WebApp's Testlar -> Fanlar click handler.
+# No Telegram token is required or stored.
+@decorators.api_view(["POST"])
+@decorators.permission_classes([AllowAny])
+def count_test_subject_visit(request: HttpRequest):
+    sid = request.data.get("subject_id")
+    if not isinstance(sid, (str, int)) or isinstance(sid, bool):
+        return Response({"status": "error", "message": "Invalid subject_id"}, status=400)
+    sid = str(sid).strip()
+    if not sid or len(sid) > 100:
+        return Response({"status": "error", "message": "Invalid subject_id"}, status=400)
+    updated = SubjectVisitCount.objects.filter(subject_id=sid, is_active=True).update(
+        visit_count=F("visit_count") + 1
+    )
+    if not updated:
+        return Response({"status": "error", "message": "Subject not found"}, status=404)
+    return Response({"status": "ok"})
