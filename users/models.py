@@ -174,3 +174,19 @@ def send_post_receiver(sender, instance: Post, created, **kwargs):
     if created:
         worker = Worker(send_post, post=instance)
         worker.start()
+
+
+class SubjectVisitCount(models.Model):
+    subject_id = models.CharField(max_length=100, unique=True)
+    subject_name = models.CharField(max_length=255)
+    visit_count = models.PositiveBigIntegerField(default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Fan sanagich"
+        verbose_name_plural = "Fan sanagich"
+
+    def __str__(self):
+        return self.subject_name
