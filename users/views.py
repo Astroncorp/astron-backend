@@ -263,7 +263,7 @@ def record_subject_visit(request: HttpRequest):
     """Count a Testlar subject opening; no visitor identity is stored."""
     try:
         # text/plain avoids a browser CORS preflight for this public event endpoint.
-        data = json.loads(request.body.decode("utf-8"))
+        data = request.data
         subject_id = data.get("subject_id")
         if isinstance(subject_id, bool) or not isinstance(subject_id, int) or subject_id <= 0:
             return Response({"status": "error", "message": "Invalid subject_id"}, status=400)
