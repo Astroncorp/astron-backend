@@ -13,7 +13,6 @@ from .models import (
     Count,
     CourseChannel,
     Post,
-    SubjectVisitCount,
     Transaction,
     User,
 )
@@ -109,17 +108,22 @@ class BonusModelAdmin(ModelAdmin):
     list_display = ["user_id", "post_id"]
 
 
-@admin.register(SubjectVisitCount)
-class SubjectVisitCountAdmin(ModelAdmin):
-    # Interfeys shabloni shu fayl ichida, qo‘shimcha HTML fayl kerak emas.
-    change_list_template = None
+# Faqat interfeys uchun proxy model: mavjud Count jadvalidan foydalanadi.
+# Alohida SubjectVisitCount modeli yoki jadvali talab qilinmaydi.
+class FanSanagich(Count):
+    class Meta:
+        proxy = True
+        verbose_name = "Fan sanagich"
+        verbose_name_plural = "Fan sanagich"
 
+
+@admin.register(FanSanagich)
+class FanSanagichAdmin(ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         if not self.has_view_or_change_permission(request):
             from django.core.exceptions import PermissionDenied
             raise PermissionDenied
 
-        # Faqat interfeys: DB/migratsiya va hisoblashga hozircha tegmaydi.
         context = {
             **self.admin_site.each_context(request),
             "title": "Fan sanagich (Test)",
@@ -132,19 +136,9 @@ class SubjectVisitCountAdmin(ModelAdmin):
         }
         if extra_context:
             context.update(extra_context)
-        return HttpResponse(engines["django"].from_string(SUBJECT_COUNTER_TEMPLATE).render(context, request))
-
-    list_display = ["display_subject_name", "display_visit_count"]
-    list_display_links = None
-    ordering = ["sort_order", "id"]
-
-    @admin.display(description="Fan", ordering="subject_name")
-    def display_subject_name(self, obj):
-        return obj.subject_name
-
-    @admin.display(description="Kirishlar soni", ordering="visit_count")
-    def display_visit_count(self, obj):
-        return obj.visit_count
+        return HttpResponse(
+            engines["django"].from_string(SUBJECT_COUNTER_TEMPLATE).render(context, request)
+        )
 
     def has_add_permission(self, request):
         return False
