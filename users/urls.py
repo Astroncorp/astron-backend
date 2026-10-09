@@ -8,6 +8,7 @@ from .views import (
     like_dislike,
     payme_callback,
     telemetry,
+    record_subject_visit,
 )
 
 urlpatterns = [
@@ -18,4 +19,5 @@ urlpatterns = [
     path("course_channels/", CourseChannelListAPIView.as_view()),
     path("like_dislike/", like_dislike),
     path("bonus/", claim_bonus),
+    path("subject-visit/", record_subject_visit),
 ]
