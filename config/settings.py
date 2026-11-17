@@ -128,6 +128,10 @@ UNFOLD = {
                         "link": reverse_lazy("admin:users_announcement_changelist"),
                     },
                     {
+                        "title": "Kanaldan tavsiya",
+                        "link": reverse_lazy("admin:users_channelrecommendation_changelist"),
+                    },
+                    {
                         "title": "Kanallar",
                         "link": reverse_lazy("admin:users_channel_changelist"),
                     },
