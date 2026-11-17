@@ -13,6 +13,8 @@ from .models import (
     Advertisement,
     Announcement,
     Bonus,
+    ChannelRecommendation,
+    ChannelRecommendationReceipt,
     Count,
     SubjectCounter,
     CourseChannel,
@@ -127,6 +129,63 @@ def get_announcement(request: HttpRequest):
             {"content": announcement.content, "created": announcement.created}
         )
     return Response({"content": None, "created": None})
+
+
+@decorators.api_view(http_method_names=["GET"])
+@decorators.permission_classes([AllowAny])
+def get_channel_recommendation(request: HttpRequest):
+    """Return one channel recommendation not yet dismissed by this user."""
+    user_id = request.query_params.get("user_id")
+    if not user_id:
+        return Response({"status": "error", "message": "user_id is required"}, status=400)
+
+    user = User.objects.filter(pk=str(user_id)).first()
+    if user is None:
+        return Response({"id": None, "content": None, "post_url": None})
+
+    recommendation = (
+        ChannelRecommendation.objects.exclude(receipts__user=user)
+        .order_by("-created", "-id")
+        .first()
+    )
+    if recommendation is None:
+        return Response({"id": None, "content": None, "post_url": None})
+
+    return Response(
+        {
+            "id": recommendation.pk,
+            "content": recommendation.content,
+            "post_url": recommendation.post_url,
+        }
+    )
+
+
+@decorators.api_view(http_method_names=["POST"])
+@decorators.permission_classes([AllowAny])
+def dismiss_channel_recommendation(request: HttpRequest):
+    """Remember X or Postni o'qish; repeated requests are harmless."""
+    user_id = request.data.get("user_id")
+    recommendation_id = request.data.get("recommendation_id")
+
+    if not user_id or isinstance(recommendation_id, bool):
+        return Response({"status": "error", "message": "Invalid parameters"}, status=400)
+    try:
+        recommendation_id = int(recommendation_id)
+    except (ValueError, TypeError):
+        return Response({"status": "error", "message": "Invalid recommendation_id"}, status=400)
+    if recommendation_id <= 0:
+        return Response({"status": "error", "message": "Invalid recommendation_id"}, status=400)
+
+    user = User.objects.filter(pk=str(user_id)).first()
+    recommendation = ChannelRecommendation.objects.filter(pk=recommendation_id).first()
+    if user is None or recommendation is None:
+        return Response({"status": "error", "message": "Not found"}, status=404)
+
+    ChannelRecommendationReceipt.objects.get_or_create(
+        recommendation=recommendation,
+        user=user,
+    )
+    return Response({"status": "ok"})
 
 
 @decorators.api_view(http_method_names=["POST"])
