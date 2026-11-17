@@ -85,6 +85,48 @@ class Announcement(models.Model):
         return self.content
 
 
+class ChannelRecommendation(models.Model):
+    # Admin paneldan yaratiladigan Telegram kanal posti tavsiyasi.
+    content = models.TextField(verbose_name="Matn")
+    post_url = models.URLField(max_length=2000, verbose_name="Telegram post havolasi")
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created", "-id"]
+        verbose_name = "Kanaldan tavsiya"
+        verbose_name_plural = "Kanaldan tavsiya"
+
+    def __str__(self):
+        return self.content[:100]
+
+
+class ChannelRecommendationReceipt(models.Model):
+    # X yoki "Postni o'qish" bosilganda bir marta saqlanadi.
+    # Shu yozuv mavjud bo'lsa, xabar foydalanuvchiga qayta ko'rsatilmaydi.
+    recommendation = models.ForeignKey(
+        ChannelRecommendation,
+        on_delete=models.CASCADE,
+        related_name="receipts",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="channel_recommendation_receipts",
+    )
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["recommendation", "user"],
+                name="unique_channel_recommendation_user",
+            )
+        ]
+
+    def __str__(self):
+        return f"Recommendation {self.recommendation_id} - User {self.user_id}"
+
+
 class Count(models.Model):
     count = models.IntegerField(default=0)
     created = models.DateField(auto_now=True)
